@@ -1,0 +1,32 @@
+version: '3'
+services:
+  python-server:
+    container_name: python-fastapi
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - type : bind
+        source : ./app
+        target : /code
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    networks:
+      - mynetwork
+
+  db:
+    container_name: db
+    image: postgres
+    restart : always
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=test
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
