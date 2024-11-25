@@ -2,7 +2,7 @@ import fastapi
 from fastapi import UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import engine
-from extract_v1_0_0 import *
+import extraction_v1_1_0
 
 app = fastapi.FastAPI()
 
@@ -25,17 +25,9 @@ app.add_middleware(
 def index():    
     return 'hi'
 
+
 @app.post('/extract')
 async def extract(file : UploadFile):
-    text = pdf_to_text_first_page(file.file)
+    pdf_info = extraction_v1_1_0.extract_subjects(file.file)
 
-    name = extract_info(text)
-
-    enrolled = extract_subjects(text)
-
-    subjects = []
-    for detail in enrolled:
-        for enroll in detail['enroll']:
-            subjects.append(enroll)
-
-    return {'subjects' : subjects}
+    return pdf_info
