@@ -11,58 +11,119 @@ def extract_subjects(pdf):
         text = page.extract_text()
 
     # extract student's id
-    student_id = re.search('Student +No +[0-9]{10}', text)
-    student_id = student_id.group()
-    # print(student_id.group()[-10:])
+    student_id = re.search('Student.+No.+[0-9]{10}', text)
+    if student_id is None:
+        student_id = ''
+    else:
+        student_id = student_id.group()[-10:]
 
     # extract student's name
-    student_english_name = re.search('Name +([a-zA-Z]+ )+', text)
-    student_english_name = student_english_name.group().split(' ')
-    student_english_name = [x for x in student_english_name if x != '']
-    student_english_name = [x for x in student_english_name[1:4]]
-    student_english_name = ' '.join(student_english_name)
-    # print(student_english_name)
+    english_name =  {
+        "fullname": "",
+        "lastname":""
+    }
+    student_english_name_match = re.search(r'(Miss|Mr\.).*?Field', text)
+    if student_english_name_match:
+        name_parts = student_english_name_match.group(0).split(' ')
+        name_parts = [x for x in name_parts if x != 'Field']
+        # skips Mr. or Miss
+        student_english_name = "".join(name_parts[1:])
+    
+        # Extract surname (longest all-caps word in the name)
+        if student_english_name:
+            surname_match = re.findall(r'[A-Z]+', student_english_name)
+            if surname_match:
+                surname = max(surname_match, key=len)
+                student_english_name = student_english_name.replace(surname, f" {surname}")
+                names = student_english_name.split(' ')
+                english_name['fullname'] = names[0]
+                english_name['lastname'] = names[1]
 
     # extract student's Thai name
     student_thai_name = re.search(r'( *[\u0E00-\u0E7F]+ )+', text)
-    student_thai_name = student_thai_name.group().replace(' ', '')
-    print(student_thai_name)
+    if student_thai_name is None:
+        student_thai_name = ''
+    else:
+        student_thai_name = student_thai_name.group().replace(' ', '')
 
-    rows_array = []
     with pdfplumber.open(pdf) as pdf:
         first_page = pdf.pages[0]
         tables = first_page.extract_tables() 
-        
-        # extract subjects for table
-        cleaned_tables = []
-        for table in tables:
-            df = pd.DataFrame(table)
-            df.columns = df.iloc[0]  # Set the first row as column headers
-            df = df[1:]  # Remove the header row
-            cleaned_tables.append(df)
+        merged_df = pd.DataFrame()
+        result = []
+        if tables:
+            # extract subjects for table
+            for table in tables:
+                df = pd.DataFrame(table)
+                df.columns = df.iloc[0]  # Set the first row as column headers
+                df = df[1:]  # Remove the header row
+            
+                if len(df.columns) == 8:
+                    df.columns = ['Course\nCode', 'Course Title', 'Grade', 'Credit', 
+                                'Course\nCode.1', 'Course Title.1', 'Grade.1', 'Credit.1']
 
-        df = pd.DataFrame(cleaned_tables[0])
+                    merged_df = pd.DataFrame({
+                        'CourseCode': df['Course\nCode'].tolist() + df['Course\nCode.1'].tolist(),
+                        'Course Title': df['Course Title'].tolist() + df['Course Title.1'].tolist(),
+                        'Grade': df['Grade'].tolist() + df['Grade.1'].tolist(),
+                        'Credit': df['Credit'].tolist() + df['Credit.1'].tolist()
+                    })
+            merged_df = merged_df.dropna(how="all").reset_index(drop=True)
+            merged_df = merged_df.to_numpy().tolist()
 
-        ## list columns of df
-        # list(cleaned_tables[0].columns.values)
-        df.columns = ['Course\nCode', 'Course Title', 'Grade', 'Credit', 
-                    'Course\nCode.1', 'Course Title.1', 'Grade.1', 'Credit.1']
+            temp_semester = {
+                "semester" : None,
+                'courses' : [],
+                "sem_gpa" : None,
+                "cum_gpa" : None
+            }
+            temp_course = {
+                "courseID" : None,
+                "courseName" : None,
+                "grade" : None,
+                "credit" : None
+            }
+            foundSemester = False
+            for item in merged_df:
+                sem = re.search(r'sem\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                cum = re.search(r'cum\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                if sem:
+                    foundSemester = False
+                    sem_gpa = float(sem.group(1))
+                    temp_semester['sem_gpa'] = sem_gpa
+                    if cum:
+                        cum_gpa = float(cum.group(1))
+                        temp_semester['cum_gpa'] = cum_gpa
+                    else:
+                        temp_semester['cum_gpa'] = "-"
+                    result.append(temp_semester)
+                    temp_semester = temp_semester.fromkeys(temp_semester, None)
+                    temp_semester['courses'] = []
 
-        merged_df = pd.DataFrame({
-            'Course\nCode': df['Course\nCode'].tolist() + df['Course\nCode.1'].tolist(),
-            'Course Title': df['Course Title'].tolist() + df['Course Title.1'].tolist(),
-            'Grade': df['Grade'].tolist() + df['Grade.1'].tolist(),
-            'Credit': df['Credit'].tolist() + df['Credit.1'].tolist()
-        })
+                semester = re.search(r'.*(Semester|semester|Session|session).*', item[0])
+                if semester:
+                    temp_semester['semester'] = semester.group()
+                    foundSemester = True
+                elif foundSemester:
+                    temp_course['courseID'] = item[0]
+                    temp_course['courseName'] = item[1]
+                    temp_course['grade'] = item[2]
+                    temp_course['credit'] = item[3]
+                    temp_semester['courses'].append(temp_course)
+                    # clear value
+                    temp_course = temp_course.fromkeys(temp_course, None)
 
-        merged_df = merged_df.dropna()
-        rows_array = merged_df.to_numpy().tolist()
+
 
     return {
-        "student" : {
-            "English name" : student_english_name,
-            "Thai name" : student_thai_name,
-            "No" : student_id,
-        },
-        "subjects" : rows_array
+        "studentID" : student_id,
+        "thai_name" : student_thai_name,
+        "english_name" : english_name,
+        "result" : result,
     }
+
+# path = "../../../../Downloads/transcript_ยื่นจบ.pdf"
+# path = '../../transcript_sample/6310401041.pdf'
+# f = extract_subjects(path)
+# print(f['english_name'])
+# print(f['thai_name'])
