@@ -15,6 +15,7 @@ GeneralGroupData = [
     ["LanguageandCommunication", 13],
     ["ThaiCitizenandGlobalCitizen", 3],
     ["Aesthetics", 3],
+    ['FacultyGECourses', 5]
 ]
 
 MajorGroupData = [
@@ -24,10 +25,13 @@ MajorGroupData = [
 ]
 
 cs_courses = pd.read_csv("./database/cs_course.csv", dtype={'codeCourse': str})
-other_courses = pd.read_csv("./database/complete_courses.csv", dtype={'codeCourse': str})
+other_courses = pd.read_csv("./database/result.csv", dtype={'codeCourse': str})
 
 
 cs_courses = cs_courses.drop("courseYear", axis=1)
+cs_courses["affiliation"] = 'คณะวิทยาศาสตร์'
+cs_courses = cs_courses[["codeCourse", "name", "credit", "affiliation", "type"]]
+
 CourseData = pd.concat([cs_courses, other_courses], ignore_index=True)
 CourseData = CourseData.to_numpy().tolist()
 
@@ -61,8 +65,8 @@ def seed():
             print("SubjectGroup data already exists.")
         if not db.query(Course).first():
             for data in CourseData:
-                group = db.query(SubjectGroup).filter(SubjectGroup.group_name == data[3]).first()
-                course = Course(course_id=data[0], course_name=data[1], group_name=group.group_name, credit_amount=data[2])
+                group = db.query(SubjectGroup).filter(SubjectGroup.group_name == data[4]).first()
+                course = Course(course_id=data[0], course_name=data[1], group_name=group.group_name, credit_amount=data[2], affiliation=data[3])
                 db.add(course)
             db.commit()     
             print("seeding Course is complete")    

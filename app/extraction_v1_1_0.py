@@ -17,6 +17,15 @@ def extract_subjects(pdf):
     else:
         student_id = student_id.group()[-10:]
 
+    # extract faculty
+    faculty = re.search('Faculty of +[A-Za-z]+', text)
+    if faculty is None:
+        faculty = ''
+    else:
+        faculty = faculty.group()
+        faculty = faculty[11:]
+        faculty = faculty.strip()
+
     # extract student's name
     english_name =  {
         "fullname": "",
@@ -71,6 +80,15 @@ def extract_subjects(pdf):
             merged_df = merged_df.dropna(how="all").reset_index(drop=True)
             merged_df = merged_df.to_numpy().tolist()
 
+            # validate course name
+            for index, data in enumerate(merged_df):
+                if data[1] is not None:
+                    if not data[1][0].isupper():
+                        for i, s in enumerate(data[1]):
+                            if s.isupper():
+                                merged_df[index][1] = data[1][i:]
+                                break
+
             temp_semester = {
                 "semester" : None,
                 'courses' : [],
@@ -85,12 +103,19 @@ def extract_subjects(pdf):
             }
             foundSemester = False
             for item in merged_df:
-                sem = re.search(r'sem\. G\.P\.A\. = (\d+\.\d+)', item[0])
-                cum = re.search(r'cum\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                # sem = re.search(r'sem\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                # cum = re.search(r'cum\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                sem = re.search(r'sem\. G\.P\.A\. = ', item[0])
+                cum = re.search(r'cum\. G\.P\.A\. = ', item[0])
                 if sem:
+                    sem = re.search(r'sem\. G\.P\.A\. = (\d+\.\d+)', item[0])
+                    cum = re.search(r'cum\. G\.P\.A\. = (\d+\.\d+)', item[0])
                     foundSemester = False
-                    sem_gpa = float(sem.group(1))
-                    temp_semester['sem_gpa'] = sem_gpa
+                    if sem:
+                        sem_gpa = float(sem.group(1))
+                        temp_semester['sem_gpa'] = sem_gpa
+                    else:
+                        temp_semester['sem_gpa'] = "-"
                     if cum:
                         cum_gpa = float(cum.group(1))
                         temp_semester['cum_gpa'] = cum_gpa
@@ -105,6 +130,8 @@ def extract_subjects(pdf):
                     temp_semester['semester'] = semester.group()
                     foundSemester = True
                 elif foundSemester:
+                    if item[0] is None or item[1] == None or item[2] == None or item[3] == None:
+                        continue
                     temp_course['courseID'] = item[0]
                     temp_course['courseName'] = item[1]
                     temp_course['grade'] = item[2]
@@ -119,6 +146,7 @@ def extract_subjects(pdf):
         "studentID" : student_id,
         "thai_name" : student_thai_name,
         "english_name" : english_name,
+        "faculty" : faculty,
         "result" : result,
     }
 

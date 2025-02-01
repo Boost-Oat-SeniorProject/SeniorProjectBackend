@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from database.database import init_db
 from database.seeder import seed
 import extraction_v1_1_0
+from to_categories import to_categories
 
 @asynccontextmanager
 async def lifespan(app):
@@ -36,5 +37,6 @@ def index():
 @app.post('/extract')
 async def extract(file : UploadFile):
     pdf_info = extraction_v1_1_0.extract_subjects(file.file)
+    categories = to_categories(pdf_info)
 
-    return pdf_info
+    return categories
