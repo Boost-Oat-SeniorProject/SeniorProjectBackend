@@ -1,0 +1,10 @@
+group_name,least_credit_amount,type_name
+"Wellness",3,"General Education Courses"
+"Entrepreneurship",3,"General Education Courses"
+"LanguageandCommunication",13,"General Education Courses"
+"ThaiCitizenandGlobalCitizen",3,"General Education Courses"
+"Aesthetics",3,"General Education Courses"
+'FacultyGECourses',5,"General Education Courses"
+"Coresubject",16,"Major Courses"
+"RestrictedElective",55,"Major Courses"
+"Elective",21,"Major Courses"

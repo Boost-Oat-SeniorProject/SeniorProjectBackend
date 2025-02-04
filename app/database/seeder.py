@@ -3,36 +3,16 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .model import SubjectTypeConf, SubjectGroup, Course
 
-SubjectTypeConfData = [
-    ["General Education Courses", 30, "2560"],
-    ["Major Courses", 92, "2560"],
-    ["Open Electives", 6, "2560"]
-]
+SubjectTypeConfData = pd.read_csv("./database/SubjectTypeConfData.csv", dtype={'type_name':str, 'curriculum_year': str}).to_numpy().tolist()
 
-GeneralGroupData = [
-    ["Wellness", 3],
-    ["Entrepreneurship", 3],
-    ["LanguageandCommunication", 13],
-    ["ThaiCitizenandGlobalCitizen", 3],
-    ["Aesthetics", 3],
-    ['FacultyGECourses', 5]
-]
-
-MajorGroupData = [
-    ["Coresubject", 16],
-    ["RestrictedElective", 55],
-    ["Elective", 21]
-]
+SubjectGroupData = pd.read_csv("./database/SubjectGroupData.csv").to_numpy().tolist()
 
 cs_courses = pd.read_csv("./database/cs_course.csv", dtype={'codeCourse': str})
 other_courses = pd.read_csv("./database/result.csv", dtype={'codeCourse': str})
 
 
-cs_courses = cs_courses.drop("courseYear", axis=1)
-cs_courses["affiliation"] = 'คณะวิทยาศาสตร์'
-cs_courses = cs_courses[["codeCourse", "name", "credit", "affiliation", "type"]]
-
 CourseData = pd.concat([cs_courses, other_courses], ignore_index=True)
+CourseData = CourseData.drop("courseYear", axis=1)
 CourseData = CourseData.to_numpy().tolist()
 
 def seed():
@@ -50,14 +30,9 @@ def seed():
             print("SubjectTypeConf data already exists.")
         
         if not db.query(SubjectGroup).first():
-            general = db.query(SubjectTypeConf).filter(SubjectTypeConf.type_name == "General Education Courses").first()
-            for data in GeneralGroupData:
-                group = SubjectGroup(group_name=data[0], type_id=general.type_id, least_credit_amount=data[1])
-                db.add(group)
-            db.commit()
-            major = db.query(SubjectTypeConf).filter(SubjectTypeConf.type_name == "Major Courses").first()
-            for data in MajorGroupData:
-                group = SubjectGroup(group_name=data[0], type_id=major.type_id, least_credit_amount=data[1])
+            for data in SubjectGroupData:
+                subject_type_conf = db.query(SubjectTypeConf).filter(SubjectTypeConf.type_name == data[2]).first()
+                group = SubjectGroup(group_name=data[0], type_id=subject_type_conf.type_id, least_credit_amount=data[1])
                 db.add(group)
             db.commit()
             print("seeding SubjectGroup is complete")    
