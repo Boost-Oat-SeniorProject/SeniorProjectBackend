@@ -78,7 +78,7 @@ def to_categories(info):
     # Separate to FacultyGECourses
     for group_name in groups:
         if group_name not in ["FacultyGECourses", "Coresubject", "RestrictedElective", "Elective"]:
-            facultyGECoursesCredit = find_sum_credit(groups['FacultyGECourses']['courses'])
+            facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
             if facultyGECoursesCredit >= groups['FacultyGECourses']['least_credit_amount']:
                 break
             for course in groups[group_name]['courses']:
