@@ -144,8 +144,8 @@ def extract_subjects(pdf):
 
     return {
         "studentID" : student_id,
-        "thai_name" : student_thai_name,
-        "english_name" : english_name,
+        "thaiName" : student_thai_name,
+        "englishName" : english_name,
         "faculty" : faculty,
         "result" : result,
     }
