@@ -4,8 +4,8 @@ from sqlalchemy.orm import joinedload
 
 def find_sum_credit(subjects):
     total = 0
-    for course in subjects:
-        total += course.creditAmount
+    for enrollment in subjects:
+        total += enrollment.course.creditAmount
     return total
         
 def group_constraints(course):
@@ -131,12 +131,12 @@ def to_categories(info):
         course = enrollment.course
         if enrollment.grade not in ['W', 'F', 'P']:
             if course.groupName in groups:
-                groups[course.groupName]['courses'].append(course)
+                groups[course.groupName]['courses'].append(enrollment)
 
     for group_name in groups:
         groups[group_name]['courses'] = sorted(
             groups[group_name]['courses'],
-            key=lambda course: course.creditAmount,
+            key=lambda course: enrollment.course.creditAmount,
             reverse=True
         )
 
@@ -146,12 +146,12 @@ def to_categories(info):
             facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
             if facultyGECoursesCredit >= groups['FacultyGECourses']['least_credit_amount']:
                 break
-            for course in groups[group_name]['courses']:
+            for enrollment in groups[group_name]['courses']:
                 total = find_sum_credit(groups[group_name]['courses'])
-                if total - course.creditAmount >= groups[group_name]['least_credit_amount']:
-                    if group_constraints(course):
-                        temp = course
-                        groups[group_name]['courses'].remove(course)
+                if total - enrollment.course.creditAmount >= groups[group_name]['least_credit_amount']:
+                    if group_constraints(enrollment.course):
+                        temp = enrollment
+                        groups[group_name]['courses'].remove(enrollment)
                         groups['FacultyGECourses']['courses'].append(temp)
 
     # Separate to Open Electives
@@ -167,12 +167,12 @@ def to_categories(info):
             total_credit_open_electives = find_sum_credit(temp_open_electives)
             if total_credit_open_electives >= open_electives_data["leastCreditAmount"]:
                 break
-            for course in groups[group_name]['courses']:
+            for enrollment in groups[group_name]['courses']:
                 total = find_sum_credit(groups[group_name]['courses'])
-                if total - course.creditAmount >= groups[group_name]['least_credit_amount']:
-                    if group_constraints(course):
-                        temp = course
-                        groups[group_name]['courses'].remove(course)
+                if total - enrollment.course.creditAmount >= groups[group_name]['least_credit_amount']:
+                    if group_constraints(enrollment.course):
+                        temp = enrollment
+                        groups[group_name]['courses'].remove(enrollment)
                         temp_open_electives.append(temp)
 
     # Calculate total credits of each group
@@ -202,7 +202,13 @@ def to_categories(info):
         for all_groups_sub_group in all_groups_group["subGroups"]:
             for subGroup in groups:
                 if all_groups_sub_group["subGroupName"] == subGroup:
-                    all_groups_sub_group['courses'] = groups[subGroup]['courses']
+                    all_groups_sub_group['courses'] = [{
+                        "courseName" : x.course.courseName,
+                        "courseId" : x.course.courseId,
+                        "creditAmount" : x.course.creditAmount,
+                        "grade" : x.grade,
+                        "enrollmentDate" : x.enrollmentDate   
+                    } for x in groups[subGroup]['courses']]
                     all_groups_sub_group['sumCreditAmount'] = groups[subGroup]['sum_credit_amount']
                     all_groups_sub_group['status'] = groups[subGroup]['status']
 
@@ -215,7 +221,13 @@ def to_categories(info):
     for all_groups_group in all_groups:
         for all_groups_sub_group in all_groups_group["subGroups"]:
             if all_groups_sub_group["subGroupName"] == "Open Electives":
-                all_groups_sub_group["courses"] = temp_open_electives
+                all_groups_sub_group["courses"] = [{
+                        "courseName" : x.course.courseName,
+                        "courseId" : x.course.courseId,
+                        "creditAmount" : x.course.creditAmount,
+                        "grade" : x.grade,
+                        "enrollmentDate" : x.enrollmentDate
+                    } for x in temp_open_electives]
                 all_groups_sub_group["status"] = open_electives_status
                 all_groups_sub_group["sumCreditAmount"] = total_credits_open_electives
 
@@ -243,6 +255,5 @@ def to_categories(info):
         info["message"] = "The system cannot generate a conclusion because there are courses that are not found in the system."
     else:
         info["isGraduated"] = graduated
-
 
     return info
