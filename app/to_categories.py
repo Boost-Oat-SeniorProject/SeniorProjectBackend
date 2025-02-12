@@ -1,5 +1,6 @@
-from database.model import SubjectTypeConf, SubjectGroup, Course
+from database.model import SubjectTypeConf, SubjectGroup, Course, Student, Enroll, UnfoundCourse
 from database.database import SessionLocal
+from sqlalchemy.orm import joinedload
 
 def find_sum_credit(subjects):
     total = 0
@@ -23,8 +24,63 @@ def group_constraints(course):
     
     return True
 
+def is_student_exist(db, info):
+    # student = db.query(Student).options(joinedload(Student.courses), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
+    student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
+    if student:
+        return student
+    return None
+
+def update_course_to_db(db, info):
+    # validate student if existed
+    student = is_student_exist(db, info)
+    if student is None:
+        student = Student(studentId=info["studentId"], studentEnglishName=f"{info['englishName']['fullname']} {info['englishName']['lastname']}", studentThaiName=info["thaiName"], faculty=info["faculty"])
+        db.add(student)
+        db.commit()
+        student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter_by(studentId=info["studentId"]).first()
+    if student.enrollments:
+        for course in student.enrollments:
+            db.delete(course)
+        for unfound_course in student.unfoundCourses:
+            db.delete(unfound_course)
+        db.commit()
+        db.refresh(student)
+
+    subjects = info["result"]
+    for i in subjects:
+        for course in i["courses"]:
+            detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName==course["courseName"].replace(" ", "")).first()
+            # validate if coursename is shorter than original
+            if not detail_course:
+                detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName.like(f"{course['courseName'].replace(' ', '')}%")).first()
+
+            if detail_course:
+                new_enrollment = Enroll(
+                    studentId=student.studentId,
+                    courseId=detail_course.courseId,
+                    courseName=detail_course.courseName,
+                    enrollmentDate=i["semester"],
+                    grade=course["grade"]
+                )
+                db.add(new_enrollment)
+            else:
+                unfound_course = UnfoundCourse(
+                    studentId=student.studentId,
+                    courseId=course["courseID"],
+                    courseName=course["courseName"],
+                    enrollmentDate=i["semester"],
+                    grade=course["grade"]
+                )
+                db.add(unfound_course)
+    db.commit()
+    print("insert completed")
+    db.refresh(student)
+    return student
+
 def to_categories(info):
     db: Session = SessionLocal()
+    student = update_course_to_db(db, info)
 
     all_groups = []
     subjectTypeConfs = db.query(SubjectTypeConf).all()
@@ -61,8 +117,6 @@ def to_categories(info):
         }
         all_groups.append(temp_group)
 
-
-    subjects = info["result"]
     groups = {}
     group_names = db.query(SubjectGroup).all()
     for group_name in group_names:
@@ -72,24 +126,12 @@ def to_categories(info):
             "sum_credit_amount" : None,
             "status" : False
         }
-    # categorizes each courses
-    not_found_in_db = []
-    subjects = info["result"]
-    for i in subjects:
-        for course in i["courses"]:
-            if course["grade"] not in ['W', 'F', 'P']:
-                detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName==course["courseName"].replace(" ", "")).first()
-                if not detail_course:
-                    detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName.like(f"{course['courseName'].replace(' ', '')}%")).first()
-
-                if detail_course:
-                    if detail_course.groupName in groups:
-                        groups[detail_course.groupName]['courses'].append(detail_course)
-                else:
-                    not_found_in_db.append({
-                        'courseName' : course["courseName"], 
-                        'courseId' : course["courseID"]
-                    })
+    
+    for enrollment in student.enrollments:
+        course = enrollment.course
+        if enrollment.grade not in ['W', 'F', 'P']:
+            if course.groupName in groups:
+                groups[course.groupName]['courses'].append(course)
 
     for group_name in groups:
         groups[group_name]['courses'] = sorted(
@@ -188,12 +230,19 @@ def to_categories(info):
     info["totalCredit"] = total_credits
     info["notFoundCourses"] =  {
             "GroupName": "ไม่มีวิชาอยู่ในระบบ",
-            "Course": not_found_in_db,
+            "Course": [
+                {
+                    "courseName" : x.courseName,
+                    "courseId" : x.courseId,
+                    "grade" : x.grade,
+                    "enrollmentDate" : x.enrollmentDate,
+                } for x in student.unfoundCourses],
     }
-    if not_found_in_db:
+    if student.unfoundCourses:
         info["isGraduated"] = False
         info["message"] = "The system cannot generate a conclusion because there are courses that are not found in the system."
     else:
         info["isGraduated"] = graduated
+
 
     return info

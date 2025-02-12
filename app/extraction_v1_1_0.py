@@ -143,7 +143,7 @@ def extract_subjects(pdf):
 
 
     return {
-        "studentID" : student_id,
+        "studentId" : student_id,
         "thaiName" : student_thai_name,
         "englishName" : english_name,
         "faculty" : faculty,

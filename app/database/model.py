@@ -1,20 +1,39 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, PrimaryKeyConstraint, UniqueConstraint, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, PrimaryKeyConstraint, UniqueConstraint, ForeignKeyConstraint, CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
-class enroll(Base):
+class Enroll(Base):
     __tablename__ = "ENROLL"
+    # enrollId = Column("Id", Integer, autoincrement=True)
     studentId = Column("StudentId", String, ForeignKey("STUDENT.StudentId"))
     courseId = Column("CourseId", String)
     courseName = Column("CourseName", String)
     enrollmentDate = Column("EnrollmentDate", String)
+    grade = Column("Grade", String(2))
+
+    __table_args__ = (
+        # PrimaryKeyConstraint("Id", "StudentId", "CourseId", "CourseName"),
+        PrimaryKeyConstraint("StudentId", "CourseId", "CourseName", "Grade"),
+        ForeignKeyConstraint(["CourseId", "CourseName"], ["COURSE.CourseId", "COURSE.CourseName"], name="fk_course", ondelete="CASCADE"),
+    )
+
+    student = relationship("Student", back_populates="enrollments") 
+    course = relationship("Course", primaryjoin="and_(Enroll.courseId == Course.courseId, Enroll.courseName == Course.courseName)", backref="enrollments")
+
+class UnfoundCourse(Base):
+    __tablename__ = "UNFOUND_COURSE"
+    studentId = Column("StudentId", String, ForeignKey("STUDENT.StudentId", ondelete="CASCADE"))
+    courseId = Column("CourseId", String)
+    courseName = Column("CourseName", String)
+    enrollmentDate = Column("EnrollmentDate", String)
+    grade = Column("Grade", String(2))
 
     __table_args__ = (
         PrimaryKeyConstraint("StudentId", "CourseId", "CourseName"),
-        ForeignKeyConstraint(["CourseId", "CourseName"], ["COURSE.CourseId", "COURSE.CourseName"], name="fk_course"),
     )
 
+    belongsTo = relationship("Student", back_populates="unfoundCourses")
 
 class SubjectTypeConf(Base):
     __tablename__ = "SUBJECT_TYPE_CONF"
@@ -51,14 +70,9 @@ class Course(Base):
         UniqueConstraint("CourseId", "CourseName"),
     )
 
-    def __str__(self):
-        return f"{self.course_id}, {self.course_name}, {self.credit_amount}, {self.affiliation}, {self.group_name}"
-
     # relation with SubjectGroup
     beGroupOf = relationship("SubjectGroup", back_populates="hasSubject")
 
-    # relation with Student
-    students = relationship('Student', secondary="ENROLL", back_populates='courses')
 
 class Student(Base):
     __tablename__ = "STUDENT"
@@ -67,5 +81,7 @@ class Student(Base):
     studentThaiName = Column("StudentThaiName", String)
     faculty = Column("Faculty", String)
 
-    # relation with Course
-    courses = relationship('Course', secondary="ENROLL", back_populates='students')
+    enrollments = relationship("Enroll", back_populates="student")
+
+    # relation with Unfound
+    unfoundCourses = relationship('UnfoundCourse', back_populates="belongsTo")
