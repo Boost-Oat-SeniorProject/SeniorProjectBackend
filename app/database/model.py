@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, PrimaryKeyConstraint, UniqueConstraint, ForeignKeyConstraint, CheckConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, PrimaryKeyConstraint, UniqueConstraint, ForeignKeyConstraint, CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -82,6 +82,7 @@ class Student(Base):
     studentEnglishName = Column("StudentEnglishName", String)
     studentThaiName = Column("StudentThaiName", String)
     faculty = Column("Faculty", String)
+    gpa = Column("Gpa", Float, default=0.0)
 
     enrollments = relationship("Enroll", back_populates="student")
 

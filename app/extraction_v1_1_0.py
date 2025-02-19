@@ -156,9 +156,3 @@ def extract_subjects(pdf):
         "faculty" : faculty,
         "result" : result,
     }
-
-# path = "../../../../Downloads/transcript_ยื่นจบ.pdf"
-# path = '../../transcript_sample/6310401041.pdf'
-# f = extract_subjects(path)
-# print(f['english_name'])
-# print(f['thai_name'])

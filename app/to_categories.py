@@ -24,8 +24,35 @@ def group_constraints(course):
     
     return True
 
+def calculateGPA(db, student):
+    grades = {
+        "A": 4.0,
+        "B+": 3.5,
+        "B": 3.0,
+        "C+": 2.5,
+        "C": 2.0,
+        "D+": 1.5,
+        "D": 1.0,
+        "F": 0,
+    }
+
+    total = 0
+    credit = 0
+    for enrollment in student.enrollments:
+        course = enrollment.course
+        if enrollment.grade in grades:
+            total += grades[enrollment.grade] * course.creditAmount
+            credit += course.creditAmount
+    
+    gpa = round(total / credit, 2)
+    student.gpa = gpa
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    return student
+
 def is_student_exist(db, info):
-    # student = db.query(Student).options(joinedload(Student.courses), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
     student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
     if student:
         return student
@@ -74,8 +101,11 @@ def update_course_to_db(db, info):
                 )
                 db.add(unfound_course)
     db.commit()
-    print("insert completed")
     db.refresh(student)
+
+    if student.enrollments:
+        student = calculateGPA(db, student)
+
     return student
 
 def to_categories(info):
@@ -255,8 +285,10 @@ def to_categories(info):
     }
     if student.unfoundCourses:
         info["isGraduated"] = False
+        info["gpa"] = "The system cannot calculate GPA because there are courses that are not found in the system."
         info["message"] = "The system cannot generate a conclusion because there are courses that are not found in the system."
     else:
+        info["gpa"] = student.gpa
         info["isGraduated"] = graduated
 
     return info
