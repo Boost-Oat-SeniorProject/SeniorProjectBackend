@@ -90,6 +90,7 @@ def to_categories(info):
             subGroups.append(
                 {
                     "subGroupName" : "Open Electives",
+                    "subGroupNameTh" : "วิชาเลือกเสรี",
                     "courses" : [],
                     "leastCreditAmount" : subjectTypeConf.leastCreditAmount,
                     "sumCreditAmount" : None,
@@ -100,6 +101,7 @@ def to_categories(info):
             for group in subjectTypeConf.hasGroup:
                 tempSubGroups = {
                     "subGroupName" : group.groupName,
+                    "subGroupNameTh" : group.groupNameTh,
                     "courses" : [],
                     "leastCreditAmount" : group.leastCreditAmount,
                     "sumCreditAmount" : None,
@@ -110,6 +112,7 @@ def to_categories(info):
 
         temp_group = {
             "groupName" : subjectTypeConf.typeName,
+            "groupNameTh" : subjectTypeConf.typeNameTh,
             "subGroups" : subGroups,
             "leastCreditAmount" : subjectTypeConf.leastCreditAmount,
             "sumCreditAmount" : None,
@@ -241,7 +244,7 @@ def to_categories(info):
     info["result"] = all_groups
     info["totalCredit"] = total_credits
     info["notFoundCourses"] =  {
-            "GroupName": "ไม่มีวิชาอยู่ในระบบ",
+            "GroupNameTh": "ไม่มีวิชาอยู่ในระบบ",
             "Course": [
                 {
                     "courseName" : x.courseName,

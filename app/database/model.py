@@ -39,6 +39,7 @@ class SubjectTypeConf(Base):
     __tablename__ = "SUBJECT_TYPE_CONF"
     typeId = Column("TypeID", Integer, primary_key=True, index=True, autoincrement=True)
     typeName = Column("TypeName", String)
+    typeNameTh = Column("TypeNameTh", String)
     leastCreditAmount = Column("LeastCreditAmount", Integer)
     curriculumYear = Column("CurriculumYear", Integer)
 
@@ -49,6 +50,7 @@ class SubjectTypeConf(Base):
 class SubjectGroup(Base):
     __tablename__ = "SUBJECT_GROUP"
     groupName = Column("GroupName", String, primary_key=True, index=True)
+    groupNameTh = Column("GroupNameTh", String)
     typeId = Column("TypeID", Integer, ForeignKey("SUBJECT_TYPE_CONF.TypeID"), nullable=False, index=True)
     leastCreditAmount = Column("LeaestCreditAmount", Integer)  # Corrected the name
 

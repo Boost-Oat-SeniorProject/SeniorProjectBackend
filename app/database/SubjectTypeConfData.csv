@@ -1,4 +1,4 @@
-type_name,least_credit_amount,curriculum_year
-"General Education Courses",30,"2560"
-"Major Courses",92,"2560"
-"Open Electives",6,"2560"
+type_name,type_name_th,least_credit_amount,curriculum_year
+"General Education Courses","หมวดวิชาศึกษาทั่วไป",30,"2560"
+"Major Courses","หมวดวิชาเฉพาะ",92,"2560"
+"Open Electives","หมวดวิชาเลือกเสรี",6,"2560"

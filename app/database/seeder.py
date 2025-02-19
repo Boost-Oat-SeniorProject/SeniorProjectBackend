@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .model import SubjectTypeConf, SubjectGroup, Course
 
-SubjectTypeConfData = pd.read_csv("./database/SubjectTypeConfData.csv", dtype={'type_name':str, 'curriculum_year': str}).to_numpy().tolist()
+SubjectTypeConfData = pd.read_csv("./database/SubjectTypeConfData.csv", dtype={'type_name':str, 'type_name_th':str, 'curriculum_year': str}).to_numpy().tolist()
 
 SubjectGroupData = pd.read_csv("./database/SubjectGroupData.csv").to_numpy().tolist()
 
@@ -22,7 +22,7 @@ def seed():
     try:
         if not db.query(SubjectTypeConf).first():
             for data in SubjectTypeConfData:
-                subject_type_conf = SubjectTypeConf(typeName=data[0], leastCreditAmount=data[1], curriculumYear=data[2])
+                subject_type_conf = SubjectTypeConf(typeName=data[0], typeNameTh=data[1], leastCreditAmount=data[2], curriculumYear=data[3])
                 db.add(subject_type_conf)
             db.commit()
             print("seeding SubjectTypeConf is complete")
@@ -31,8 +31,8 @@ def seed():
         
         if not db.query(SubjectGroup).first():
             for data in SubjectGroupData:
-                subject_type_conf = db.query(SubjectTypeConf).filter(SubjectTypeConf.typeName == data[2]).first()
-                group = SubjectGroup(groupName=data[0], typeId=subject_type_conf.typeId, leastCreditAmount=data[1])
+                subject_type_conf = db.query(SubjectTypeConf).filter(SubjectTypeConf.typeName == data[3]).first()
+                group = SubjectGroup(groupName=data[0], groupNameTh=data[1], typeId=subject_type_conf.typeId, leastCreditAmount=data[2])
                 db.add(group)
             db.commit()
             print("seeding SubjectGroup is complete")    
