@@ -103,8 +103,6 @@ def extract_subjects(pdf):
             }
             foundSemester = False
             for item in merged_df:
-                # sem = re.search(r'sem\. G\.P\.A\. = (\d+\.\d+)', item[0])
-                # cum = re.search(r'cum\. G\.P\.A\. = (\d+\.\d+)', item[0])
                 sem = re.search(r'sem\. G\.P\.A\. = ', item[0])
                 cum = re.search(r'cum\. G\.P\.A\. = ', item[0])
                 if sem:
@@ -127,7 +125,16 @@ def extract_subjects(pdf):
 
                 semester = re.search(r'.*(Semester|semester|Session|session).*', item[0])
                 if semester:
-                    temp_semester['semester'] = semester.group()
+                    temp_semester_format = semester.group()
+                    temp_mapping = semester.group()
+                    temp_mapping = temp_mapping.split(" ")
+                    if temp_mapping[0].lower() == "first":
+                        temp_semester_format = f"1/{str(temp_mapping[2])}"
+                    elif temp_mapping[0].lower() == "second":
+                        temp_semester_format = f"2/{str(temp_mapping[2])}"
+                    elif temp_mapping[0].lower() == "summer":
+                        temp_semester_format = f"summer/{str(temp_mapping[2])}"
+                    temp_semester['semester'] = temp_semester_format
                     foundSemester = True
                 elif foundSemester:
                     if item[0] is None or item[1] == None or item[2] == None or item[3] == None:
