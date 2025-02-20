@@ -2,13 +2,33 @@ import pdfplumber
 import PyPDF2
 import pandas as pd
 import re
+from fastapi.responses import JSONResponse
 
 def extract_subjects(pdf):
     text = ""
-    reader = PyPDF2.PdfReader(pdf)
-    if len(reader.pages) > 0:
-        page = reader.pages[0]
-        text = page.extract_text()
+    try:
+        reader = PyPDF2.PdfReader(pdf)
+        if len(reader.pages) > 0:
+            page = reader.pages[0]
+            text = page.extract_text()
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Error reading PDF"}
+        )
+    # validate if this file is transcript
+    patterns = {
+        "university": re.compile(r".*kasetsart.*", re.IGNORECASE),
+        "student_info": re.compile(r"Student.+No.+[0-9]{10}", re.IGNORECASE),
+        "gpa": re.compile(r"G\.?P\.?A\.?", re.IGNORECASE),
+        "institution": re.compile(r".*semester.*", re.IGNORECASE),
+    }
+    matches = {key: pattern.search(text) is not None for key, pattern in patterns.items()}
+    if sum(matches.values()) < 2:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "The uploaded file does not appear to be a transcript."}
+        )
 
     # extract student's id
     student_id = re.search('Student.+No.+[0-9]{10}', text)

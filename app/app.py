@@ -1,6 +1,7 @@
 import fastapi
 from fastapi import UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from database.database import init_db
@@ -36,7 +37,14 @@ def index():
 
 @app.post('/extract')
 async def extract(file : UploadFile):
-    pdf_info = extraction_v1_1_0.extract_subjects(file.file)
-    categories = to_categories(pdf_info)
+    if not file.filename.lower().endswith(".pdf"):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Only PDF files are allowed."}
+        )
 
-    return categories
+    pdf_info = extraction_v1_1_0.extract_subjects(file.file)
+    if not isinstance(pdf_info, JSONResponse):
+        categories = to_categories(pdf_info)
+        return categories
+    return pdf_info
