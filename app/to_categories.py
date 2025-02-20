@@ -176,16 +176,33 @@ def to_categories(info):
     # Separate to FacultyGECourses
     for group_name in groups:
         if group_name not in ["FacultyGECourses", "Coresubject", "RestrictedElective", "Elective"]:
-            facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
-            if facultyGECoursesCredit >= groups['FacultyGECourses']['least_credit_amount']:
-                break
             for enrollment in groups[group_name]['courses']:
-                total = find_sum_credit(groups[group_name]['courses'])
-                if total - enrollment.course.creditAmount >= groups[group_name]['least_credit_amount']:
+                facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
+                diffCreditRemain = groups['FacultyGECourses']['least_credit_amount'] - facultyGECoursesCredit
+                if facultyGECoursesCredit >= groups['FacultyGECourses']['least_credit_amount']:
+                    break
+                totalCreditOfGroup = find_sum_credit(groups[group_name]['courses'])
+                if (totalCreditOfGroup - enrollment.course.creditAmount >= groups[group_name]['least_credit_amount']):
                     if group_constraints(enrollment.course):
-                        temp = enrollment
-                        groups[group_name]['courses'].remove(enrollment)
-                        groups['FacultyGECourses']['courses'].append(temp)
+                        if enrollment.course.creditAmount <= diffCreditRemain:
+                            temp = enrollment
+                            groups[group_name]['courses'].remove(enrollment)
+                            groups['FacultyGECourses']['courses'].append(temp)
+
+    facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
+    if facultyGECoursesCredit < groups['FacultyGECourses']['least_credit_amount']:
+        for group_name in groups:
+            if group_name not in ["FacultyGECourses", "Coresubject", "RestrictedElective", "Elective"]:
+                facultyGECoursesCredit = find_sum_credit(groups["FacultyGECourses"]['courses'])
+                if facultyGECoursesCredit >= groups['FacultyGECourses']['least_credit_amount']:
+                    break
+                for enrollment in groups[group_name]['courses']:
+                    total = find_sum_credit(groups[group_name]['courses'])
+                    if total - enrollment.course.creditAmount >= groups[group_name]['least_credit_amount']:
+                        if group_constraints(enrollment.course):
+                            temp = enrollment
+                            groups[group_name]['courses'].remove(enrollment)
+                            groups['FacultyGECourses']['courses'].append(temp)
 
     # Separate to Open Electives
     temp_open_electives = []
@@ -224,8 +241,11 @@ def to_categories(info):
 
     open_electives_status = False
     total_credits_open_electives = find_sum_credit(temp_open_electives)
-    if total_credit_open_electives >= open_electives_data["leastCreditAmount"]:
+    if total_credits_open_electives >= open_electives_data["leastCreditAmount"]:
         open_electives_status = True
+    else:
+        graduated = False
+        info["message"] += f"Open Electives's credits do not meet the minimum requirement.\n"
     total_credits += total_credits_open_electives
     
     # Map groups to all_groups
@@ -281,11 +301,14 @@ def to_categories(info):
                     "courseId" : x.courseId,
                     "grade" : x.grade,
                     "enrollmentDate" : x.enrollmentDate,
-                } for x in student.unfoundCourses],
+                } for x in student.unfoundCourses if x.grade not in ['W', 'P', 'F']],
     }
-    if student.unfoundCourses:
+
+    unfoundCourse = [x for x in student.unfoundCourses if x.grade not in ['W', 'P', 'F']]
+
+    if unfoundCourse:
         info["isGraduated"] = False
-        info["gpa"] = "The system cannot calculate GPA because there are courses that are not found in the system."
+        info["gpa"] = ""
         info["message"] = "The system cannot generate a conclusion because there are courses that are not found in the system."
     else:
         info["gpa"] = student.gpa
