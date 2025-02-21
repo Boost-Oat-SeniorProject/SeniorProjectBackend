@@ -34,6 +34,7 @@ def calculateGPA(db, student):
         "D+": 1.5,
         "D": 1.0,
         "F": 0,
+        "W": 0,
     }
 
     total = 0
