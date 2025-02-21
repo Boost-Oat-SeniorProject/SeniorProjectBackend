@@ -34,7 +34,6 @@ def calculateGPA(db, student):
         "D+": 1.5,
         "D": 1.0,
         "F": 0,
-        "W": 0,
     }
 
     total = 0
@@ -81,7 +80,7 @@ def update_course_to_db(db, info):
             detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName==course["courseName"].replace(" ", "")).first()
             # validate if coursename is shorter than original
             if not detail_course:
-                detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName.like(f"{course['courseName'].replace(' ', '')}%")).first()
+                detail_course = db.query(Course).filter(Course.courseId==course["courseID"], Course.courseName.ilike(f"%{course['courseName'].replace(' ', '%')}%")).first()
 
             if detail_course:
                 new_enrollment = Enroll(
@@ -302,10 +301,10 @@ def to_categories(info):
                     "courseId" : x.courseId,
                     "grade" : x.grade,
                     "enrollmentDate" : x.enrollmentDate,
-                } for x in student.unfoundCourses if x.grade not in ['W', 'P', 'F']],
+                } for x in student.unfoundCourses if x.grade not in ['W', 'P']],
     }
 
-    unfoundCourse = [x for x in student.unfoundCourses if x.grade not in ['W', 'P', 'F']]
+    unfoundCourse = [x for x in student.unfoundCourses if x.grade not in ['W', 'P']]
 
     if unfoundCourse:
         info["isGraduated"] = False
