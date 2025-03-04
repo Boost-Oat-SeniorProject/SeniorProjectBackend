@@ -8,7 +8,9 @@ fastapi==0.115.6
 h11==0.14.0
 idna==3.10
 numpy==2.2.0
+opencv-python==4.11.0.86
 pandas==2.2.3
+pdf2image==1.17.0
 pdfminer.six==20231228
 pdfplumber==0.11.4
 pillow==11.0.0
@@ -18,6 +20,7 @@ pydantic==2.10.3
 pydantic_core==2.27.1
 PyPDF2==3.0.1
 pypdfium2==4.30.0
+pytesseract==0.3.13
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.9
