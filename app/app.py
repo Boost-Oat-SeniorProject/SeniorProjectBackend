@@ -1,8 +1,10 @@
 import fastapi
 from fastapi import UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
+import urllib.parse
+import os
 
 from database.database import init_db
 from database.seeder import seed
@@ -63,3 +65,16 @@ async def extract(file : UploadFile):
     pdf_info = extraction_v1_2_0.extract(file.file)
 
     return pdf_info
+
+
+@app.get('/to_pdf')
+def to_pdf():
+    encoded_filename = urllib.parse.quote("แบบตรวจสอบหลักสูตร.pdf")  # Encode for non-ASCII characters
+    
+    pdf_data = test()
+
+    return StreamingResponse(
+        pdf_data,  # Pass BytesIO buffer
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{encoded_filename}"'}
+    )
