@@ -79,9 +79,7 @@ class Course(Base):
 class Student(Base):
     __tablename__ = "STUDENT"
     studentId = Column("StudentId", String, primary_key=True, index=True)
-    studentEnglishName = Column("StudentEnglishName", String)
     studentThaiName = Column("StudentThaiName", String)
-    faculty = Column("Faculty", String)
     gpa = Column("Gpa", Float, default=0.0)
 
     enrollments = relationship("Enroll", back_populates="student")

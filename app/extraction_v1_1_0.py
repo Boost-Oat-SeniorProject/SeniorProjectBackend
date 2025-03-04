@@ -37,37 +37,6 @@ def extract_subjects(pdf):
     else:
         student_id = student_id.group()[-10:]
 
-    # extract faculty
-    faculty = re.search('Faculty of +[A-Za-z]+', text)
-    if faculty is None:
-        faculty = ''
-    else:
-        faculty = faculty.group()
-        faculty = faculty[11:]
-        faculty = faculty.strip()
-
-    # extract student's name
-    english_name =  {
-        "fullname": "",
-        "lastname":""
-    }
-    student_english_name_match = re.search(r'(Miss|Mr\.).*?Field', text)
-    if student_english_name_match:
-        name_parts = student_english_name_match.group(0).split(' ')
-        name_parts = [x for x in name_parts if x != 'Field']
-        # skips Mr. or Miss
-        student_english_name = "".join(name_parts[1:])
-    
-        # Extract surname (longest all-caps word in the name)
-        if student_english_name:
-            surname_match = re.findall(r'[A-Z]+', student_english_name)
-            if surname_match:
-                surname = max(surname_match, key=len)
-                student_english_name = student_english_name.replace(surname, f" {surname}")
-                names = student_english_name.split(' ')
-                english_name['fullname'] = names[0]
-                english_name['lastname'] = names[1]
-
     # extract student's Thai name
     student_thai_name = re.search(r'( *[\u0E00-\u0E7F]+ )+', text)
     if student_thai_name is None:
@@ -172,7 +141,5 @@ def extract_subjects(pdf):
     return {
         "studentId" : student_id,
         "thaiName" : student_thai_name,
-        "englishName" : english_name,
-        "faculty" : faculty,
         "result" : result,
     }

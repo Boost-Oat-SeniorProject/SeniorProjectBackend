@@ -62,7 +62,7 @@ def update_course_to_db(db, info):
     # validate student if existed
     student = is_student_exist(db, info)
     if student is None:
-        student = Student(studentId=info["studentId"], studentEnglishName=f"{info['englishName']['fullname']} {info['englishName']['lastname']}", studentThaiName=info["thaiName"], faculty=info["faculty"])
+        student = Student(studentId=info["studentId"], studentThaiName=info["thaiName"])
         db.add(student)
         db.commit()
         student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter_by(studentId=info["studentId"]).first()
