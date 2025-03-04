@@ -9,7 +9,7 @@ services:
     volumes:
       - type : bind
         source : ./app
-        target : /code
+        target : /app
     environment:
       - DATABASE_URL=${DATABASE_URL}
     networks:

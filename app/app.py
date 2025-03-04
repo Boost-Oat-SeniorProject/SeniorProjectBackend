@@ -9,6 +9,8 @@ from database.seeder import seed
 import extraction_v1_1_0
 from to_categories import to_categories
 
+from to_pdf.to_course_inspection_from import test
+
 @asynccontextmanager
 async def lifespan(app):
     init_db()
@@ -31,7 +33,7 @@ app.add_middleware(
 )
 
 @app.get('/')
-def index():    
+def index():
     return 'hi'
 
 
