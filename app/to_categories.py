@@ -248,6 +248,54 @@ def to_categories(info):
         info["message"] += f"Open Electives's credits do not meet the minimum requirement.\n"
     total_credits += total_credits_open_electives
     
+    # sorting for writing into pdf
+    for group_name in groups:
+        if group_name ==  "Wellness":
+            for course in groups[group_name]["courses"]:
+                if course.courseId.startswith('01175'):
+                    temp = course
+                    groups[group_name]["courses"].remove(course)
+                    groups[group_name]["courses"].insert(0, temp)
+
+        elif group_name ==  "LanguageandCommunication":
+            sorted_courses = sorted(groups[group_name]["courses"], key=lambda course: not course.courseId.startswith("013"))
+            for course in sorted_courses:
+                if (course.courseName.lower()).find("thai") > 0:
+                    temp = course
+                    sorted_courses.remove(course)
+                    sorted_courses.insert(0, temp)
+
+            groups[group_name]["courses"] = sorted_courses
+
+        elif group_name == "ThaiCitizenandGlobalCitizen":
+            for course in groups[group_name]["courses"]:
+                if course.courseId == "01999111":
+                    temp = course
+                    groups[group_name]["courses"].remove(course)
+                    groups[group_name]["courses"].insert(0, temp)
+
+        elif group_name == "Coresubject":
+            sorted_courses = sorted(groups[group_name]["courses"], key=lambda course: course.courseId)
+            groups[group_name]["courses"] = sorted_courses
+
+        elif group_name == "RestrictedElective":
+            sorted_courses = sorted(groups[group_name]["courses"], key=lambda course: course.courseId)
+            for course in sorted_courses:
+                if course.courseId == "01418114":
+                    temp = course
+                    sorted_courses.remove(course)
+                    sorted_courses.insert(0, temp)
+
+            groups[group_name]["courses"] = sorted_courses
+
+        elif group_name == "Elective":
+            sorted_courses = sorted(groups[group_name]["courses"], key=lambda course: course.courseId)
+            for course in sorted_courses:
+                if course.courseId == "01418131":
+                    temp = course
+                    sorted_courses.remove(course)
+                    sorted_courses.insert(0, temp)
+
     # Map groups to all_groups
     for all_groups_group in all_groups:
         all_groups_sub_group_credit = 0
