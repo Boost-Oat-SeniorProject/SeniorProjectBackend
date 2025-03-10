@@ -44,6 +44,11 @@ def calculateGPA(db, student):
             total += grades[enrollment.grade] * course.creditAmount
             credit += course.creditAmount
     
+    if student.unfoundCourses:
+        for unfoundCourse in student.unfoundCourses:
+            total += grades[unfoundCourse.grade] * unfoundCourse.creditAmount
+            credit += unfoundCourse.creditAmount
+
     gpa = round(total / credit, 2)
     student.gpa = gpa
     db.add(student)
@@ -97,7 +102,8 @@ def update_course_to_db(db, info):
                     courseId=course["courseID"],
                     courseName=course["courseName"],
                     enrollmentDate=i["semester"],
-                    grade=course["grade"]
+                    grade=course["grade"],
+                    creditAmount = int(course["credit"])
                 )
                 db.add(unfound_course)
     db.commit()
@@ -348,6 +354,7 @@ def to_categories(info):
                     "courseName" : x.courseName,
                     "courseId" : x.courseId,
                     "grade" : x.grade,
+                    "creditAmount" : x.creditAmount,
                     "enrollmentDate" : x.enrollmentDate,
                 } for x in student.unfoundCourses if x.grade not in ['W', 'P']],
     }
@@ -356,7 +363,7 @@ def to_categories(info):
 
     if unfoundCourse:
         info["isGraduated"] = False
-        info["gpa"] = ""
+        info["gpa"] = student.gpa
         info["message"] = "The system cannot generate a conclusion because there are courses that are not found in the system."
     else:
         info["gpa"] = student.gpa

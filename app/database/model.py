@@ -28,6 +28,7 @@ class UnfoundCourse(Base):
     courseName = Column("CourseName", String)
     enrollmentDate = Column("EnrollmentDate", String)
     grade = Column("Grade", String(2))
+    creditAmount = Column("CreditAmount", Integer)
 
     __table_args__ = (
         PrimaryKeyConstraint("StudentId", "CourseId", "CourseName"),
