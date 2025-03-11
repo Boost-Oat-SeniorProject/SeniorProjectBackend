@@ -1,10 +1,12 @@
 import fastapi
 from fastapi import UploadFile
+from fastapi.params import Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import urllib.parse
 import os
+import json
 
 from database.database import init_db
 from database.seeder import seed
@@ -12,7 +14,7 @@ import extraction_v1_1_0
 import extraction_v1_2_0
 from to_categories import to_categories
 
-from to_pdf.to_course_inspection_from import test
+from to_pdf.to_course_inspection_from import to_pdf
 
 @asynccontextmanager
 async def lifespan(app):
@@ -67,14 +69,16 @@ async def extract(file : UploadFile):
     return pdf_info
 
 
-@app.get('/to_pdf')
-def to_pdf():
+@app.post('/to_pdf')
+def fill_pdf(results = Body(...)):
     encoded_filename = urllib.parse.quote("แบบตรวจสอบหลักสูตร.pdf")  # Encode for non-ASCII characters
     
-    pdf_data = test()
+    # result = json.loads(results)
+    pdf_data = to_pdf(results)
 
     return StreamingResponse(
         pdf_data,  # Pass BytesIO buffer
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{encoded_filename}"'}
     )
+    
