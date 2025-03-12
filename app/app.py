@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import urllib.parse
+import os
 
 from database.database import init_db
 from database.seeder import seed
@@ -20,10 +21,10 @@ async def lifespan(app):
     yield
 
 
-app = fastapi.FastAPI(lifespan=lifespan)
+app = fastapi.FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 origins = [
-    "http://localhost:3000",
+    os.getenv('FRONTEND_URL')
 ]
 
 app.add_middleware(
