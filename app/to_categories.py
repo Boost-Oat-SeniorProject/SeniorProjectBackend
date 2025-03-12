@@ -56,7 +56,7 @@ def calculateGPA(db, student):
     db.commit()
     db.refresh(student)
 
-    return student
+    return student, credit
 
 def is_student_exist(db, info):
     student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
@@ -110,14 +110,15 @@ def update_course_to_db(db, info):
     db.commit()
     db.refresh(student)
 
+    total_credit = None
     if student.enrollments:
-        student = calculateGPA(db, student)
+        student, total_credit = calculateGPA(db, student)
 
-    return student
+    return student, total_credit
 
 def to_categories(info):
     db: Session = SessionLocal()
-    student = update_course_to_db(db, info)
+    student, total_credit = update_course_to_db(db, info)
 
     all_groups = []
     subjectTypeConfs = db.query(SubjectTypeConf).all()
@@ -234,11 +235,9 @@ def to_categories(info):
 
     # Calculate total credits of each group
     info["message"] = ""
-    total_credits = 0
     graduated = True
     for group in groups:
         total = find_sum_credit(groups[group]['courses'])
-        total_credits += total
         groups[group]["sum_credit_amount"] = total
         if total >= groups[group]['least_credit_amount']:
             groups[group]["status"] = True
@@ -253,8 +252,9 @@ def to_categories(info):
     else:
         graduated = False
         info["message"] += f"Open Electives's credits do not meet the minimum requirement.\n"
-    total_credits += total_credits_open_electives
     
+
+
     # sorting for writing into pdf
     for group_name in groups:
         if group_name ==  "Wellness":
@@ -347,7 +347,7 @@ def to_categories(info):
             all_groups_group["sumCreditAmount"] = total_credits_open_electives
 
     info["result"] = all_groups
-    info["totalCredit"] = total_credits
+    info["totalCredit"] = total_credit
     info["notFoundCourses"] =  {
             "GroupNameTh": "ไม่มีวิชาอยู่ในระบบ",
             "Course": [

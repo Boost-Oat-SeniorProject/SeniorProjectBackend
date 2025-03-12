@@ -124,7 +124,7 @@ def what_text_in_cell(image, x1, x2, y1, y2):
 
 def fill_table(image, row_pos, columns_pos, table_data, cnt):
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1.5
+    font_scale = 1
     thickness = 2
 
     # print((list(table_data))[cnt])
@@ -173,7 +173,11 @@ def fill_table(image, row_pos, columns_pos, table_data, cnt):
                 fill_data = None
                 if col_idx == 0:
                     if not is_text_in_cell(image, x1, x2, y1, y2):
-                        continue
+                        text = what_text_in_cell(image, x1, x2, y1, y2)
+                        if len(text) < 10:
+                            image[y1+10:y2-10, x1+10:x2-10] = (255)
+                        else:
+                            continue
                     fill_data = str(temp['courseId'])
                 elif col_idx == 1:
                     if not is_text_in_cell(image, x1, x2, y1, y2):
