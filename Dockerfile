@@ -1,10 +1,6 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bullseye
 
 WORKDIR /app
-
-COPY ./requirements.txt /app/requirements.txt
-
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
@@ -12,7 +8,17 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr-eng \
     poppler-utils \
     libgl1 \
+    build-essential \
+    cmake \
+    pkg-config \
+    libharfbuzz-dev \
+    libfreetype6-dev \
+    libmupdf-dev \
     && rm -rf /var/lib/apt/lists/*
+
+COPY ./requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY ./app /app
 # Add an unbuffered mode for logs
