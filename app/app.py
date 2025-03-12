@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import urllib.parse
-import os
 import json
 
 from database.database import init_db
@@ -72,8 +71,7 @@ async def extract(file : UploadFile):
 @app.post('/to_pdf')
 def fill_pdf(results = Body(...)):
     encoded_filename = urllib.parse.quote("แบบตรวจสอบหลักสูตร.pdf")  # Encode for non-ASCII characters
-    
-    # result = json.loads(results)
+
     pdf_data = to_pdf(results)
 
     return StreamingResponse(
