@@ -5,12 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import urllib.parse
-import json
 
 from database.database import init_db
 from database.seeder import seed
 import extraction_v1_1_0
-import extraction_v1_2_0
 from to_categories import to_categories
 
 from to_pdf.to_course_inspection_from import to_pdf
@@ -54,19 +52,6 @@ async def extract(file : UploadFile):
         categories = to_categories(pdf_info)
         return categories
     return pdf_info
-
-@app.post('/extract_v1_2')
-async def extract(file : UploadFile):
-    if not file.filename.lower().endswith(".pdf"):
-        return JSONResponse(
-            status_code=400,
-            content={"error": "Only PDF files are allowed."}
-        )
-
-    pdf_info = extraction_v1_2_0.extract(file.file)
-
-    return pdf_info
-
 
 @app.post('/to_pdf')
 def fill_pdf(results = Body(...)):

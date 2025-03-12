@@ -3,6 +3,7 @@ import PyPDF2
 import pandas as pd
 import re
 from fastapi.responses import JSONResponse
+import header_extraction
 
 def extract_subjects(pdf):
     text = ""
@@ -30,20 +31,8 @@ def extract_subjects(pdf):
             content={"error": "The uploaded file does not appear to be a transcript."}
         )
 
-    # extract student's id
-    student_id = re.search('Student.+No.+[0-9]{10}', text)
-    if student_id is None:
-        student_id = ''
-    else:
-        student_id = student_id.group()[-10:]
-
-    # extract student's Thai name
-    student_thai_name = re.search(r'( *[\u0E00-\u0E7F]+ )+', text)
-    if student_thai_name is None:
-        student_thai_name = ''
-    else:
-        student_thai_name = student_thai_name.group().replace(' ', '')
-
+    student_id, student_thai_name = header_extraction.extract(pdf)
+    
     with pdfplumber.open(pdf) as pdf:
         first_page = pdf.pages[0]
         tables = first_page.extract_tables() 

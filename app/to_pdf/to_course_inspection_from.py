@@ -44,12 +44,8 @@ def to_pdf(result):
 
     filled_pdf = fill_info_fields(pdf_path, fields_to_fill)
 
-    final_pdf = pdf_to_images(filled_pdf, groups)
+    pdf_buffer = pdf_to_images(filled_pdf, groups)
 
-    pdf_buffer = BytesIO()
-    with open(final_pdf, "rb") as f:
-        pdf_buffer.write(f.read())
-    
     pdf_buffer.seek(0)  # Reset buffer position to start
 
     return pdf_buffer
@@ -103,10 +99,14 @@ def pdf_to_images(pdf_path, groups):
         page1_pil.save(page1_bytes, format="PNG")
         page2_pil.save(page2_bytes, format="PNG")
 
-        # Convert images to PDF
-        with open("final_output.pdf", "wb") as f:
-            f.write(img2pdf.convert([page1_bytes.getvalue(), page2_bytes.getvalue()]))
-    return "final_output.pdf"
+        pdf_buffer = io.BytesIO()
+        pdf_buffer.write(img2pdf.convert([page1_bytes.getvalue(), page2_bytes.getvalue()]))
+
+        # Reset buffer position for reading
+        pdf_buffer.seek(0)
+
+        return pdf_buffer
+    return None
 
 
 def is_text_in_cell(image, x1, x2, y1, y2):
