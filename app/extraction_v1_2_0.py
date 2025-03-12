@@ -65,6 +65,7 @@ def extract_from_image(image, table_bbox):
     x, y, w, h = table_bbox
     detail = image[:y, :x+w]
     text = pytesseract.image_to_string(detail, lang="tha+eng", config="--psm 6")
+    print(text)
     return text
 
 def remove_special_character(text):
@@ -101,7 +102,7 @@ def extract(pdf):
                 student_id = student_id.group()[-10:]
 
             # extract student's Thai name
-            student_thai_name = re.search(r'((นาย|นาง|นางสาว)([\u0E00-\u0E7F]+ )+)', text)
+            student_thai_name = re.search(r'((นาย|นาง|นางสาว) *([\u0E00-\u0E7F]+ )+)', text)
             if student_thai_name is None:
                 student_thai_name = ''
             else:
