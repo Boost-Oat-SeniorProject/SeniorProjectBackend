@@ -46,8 +46,9 @@ def calculateGPA(db, student):
     
     if student.unfoundCourses:
         for unfoundCourse in student.unfoundCourses:
-            total += grades[unfoundCourse.grade] * unfoundCourse.creditAmount
-            credit += unfoundCourse.creditAmount
+            if unfoundCourse.grade in grades:
+                total += grades[unfoundCourse.grade] * unfoundCourse.creditAmount
+                credit += unfoundCourse.creditAmount
 
     gpa = round(total / credit, 2)
     student.gpa = gpa
