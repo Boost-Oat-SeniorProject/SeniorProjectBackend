@@ -271,6 +271,7 @@ def to_categories(info):
                     temp = course
                     sorted_courses.remove(course)
                     sorted_courses.insert(0, temp)
+            sorted_courses = sorted(groups[group_name]["courses"], key=lambda enroll: (-enroll.course.creditAmount))
 
             groups[group_name]["courses"] = sorted_courses
 
@@ -362,6 +363,8 @@ def to_categories(info):
 
     unfoundCourse = [x for x in student.unfoundCourses if x.grade not in ['W', 'P']]
 
+    if total_credit < 128:
+        info["isGraduated"] = False
     if unfoundCourse:
         info["isGraduated"] = False
         info["gpa"] = student.gpa

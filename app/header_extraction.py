@@ -83,6 +83,7 @@ def extract(pdf):
             else:
                 student_thai_name = student_thai_name.group()
                 words = student_thai_name.split(' ')
+                words.remove('')
                 if len(words) > 2:
                     student_thai_name = f"{words[0]}{words[1]} {words[2]}"
 
