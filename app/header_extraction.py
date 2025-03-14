@@ -14,33 +14,10 @@ def detect_tables(image):
     vertical_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, vertical_kernel, iterations=2)
     table_mask = cv2.add(horizontal_lines, vertical_lines)
 
-    # get columns by finding range in histogram
-    vertical_hist = cv2.reduce(vertical_lines, 0, cv2.REDUCE_AVG).flatten()
-    threshold_gap = int(image.shape[1] * 0.01)
-    columns_pos = []
-    temp_pos = 0
-    for i, v in enumerate(vertical_hist):
-        if v > 0:
-            if temp_pos == 0:
-                columns_pos.append((i, v))
-            temp_pos = i
-
-            if columns_pos:
-                prev_i, prev_v = columns_pos[-1] 
-                if prev_v < v:
-                    columns_pos[-1] = (i, v)
-
-        if v == 0:
-            if i - temp_pos > threshold_gap:
-                temp_pos = 0
-
-    max_value = max([t[1] for t in columns_pos])
-    table_pos = [t for t in columns_pos if t[1] == max_value]
-    
     contours, _ = cv2.findContours(table_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:1]
     table_bbox = cv2.boundingRect(contours[0])
-    return table_bbox, table_mask, table_pos
+    return table_bbox
 
 def extract_from_table(image, table_bbox, table_mask, table_pos):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -85,7 +62,7 @@ def extract(pdf):
             # image_path = f"page_{i+1}.png"
             # image.save(image_path, "PNG")
             image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            table_bbox, table_mask, table_pos = detect_tables(image)
+            table_bbox = detect_tables(image)
 
             text = ""
             text = extract_from_image(image, table_bbox)
@@ -105,6 +82,9 @@ def extract(pdf):
                 student_thai_name = ''
             else:
                 student_thai_name = student_thai_name.group()
+                words = student_thai_name.split(' ')
+                if len(words) > 2:
+                    student_thai_name = f"{words[0]}{words[1]} {words[2]}"
 
             return student_id, student_thai_name
             

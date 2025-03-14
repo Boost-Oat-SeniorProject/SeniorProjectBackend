@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from contextlib import asynccontextmanager
 import urllib.parse
 import os
+from dotenv import load_dotenv
 
 from database.database import init_db
 from database.seeder import seed
@@ -13,6 +14,7 @@ import extraction_v1_1_0
 from to_categories import to_categories
 
 from to_pdf.to_course_inspection_from import to_pdf
+load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app):
@@ -22,6 +24,9 @@ async def lifespan(app):
 
 
 app = fastapi.FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+
+print(os.getenv('FRONTEND_URL'))
+print(os.getenv('DATABASE_URL'))
 
 origins = [
     os.getenv('FRONTEND_URL')

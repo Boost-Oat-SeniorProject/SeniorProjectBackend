@@ -170,7 +170,7 @@ def to_categories(info):
     
     for enrollment in student.enrollments:
         course = enrollment.course
-        if enrollment.grade not in ['W', 'F', 'P']:
+        if enrollment.grade not in ['W', 'F', 'P', 'U', 'S', 'NP', 'I']:
             if course.groupName in groups:
                 groups[course.groupName]['courses'].append(enrollment)
 

@@ -2,16 +2,14 @@ version: '3'
 services:
   python-server:
     container_name: python-fastapi
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - type : bind
-        source : ./app
-        target : /app
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
+    env_file:
+      - .env
     networks:
       - backend_network
   db:
