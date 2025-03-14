@@ -364,7 +364,7 @@ def to_categories(info):
     unfoundCourse = [x for x in student.unfoundCourses if x.grade not in ['W', 'P']]
 
     if total_credit < 128:
-        info["isGraduated"] = False
+        graduated = False
     if unfoundCourse:
         info["isGraduated"] = False
         info["gpa"] = student.gpa
