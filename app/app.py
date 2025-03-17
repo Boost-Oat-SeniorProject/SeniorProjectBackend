@@ -13,7 +13,7 @@ from database.seeder import seed
 import extraction_v1_1_0
 from to_categories import to_categories
 
-from to_pdf.to_course_inspection_from import to_pdf
+from to_pdf.to_course_inspection_from import fill_pdf
 load_dotenv()
 
 @asynccontextmanager
@@ -23,7 +23,8 @@ async def lifespan(app):
     yield
 
 
-app = fastapi.FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+# app = fastapi.FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+app = fastapi.FastAPI(lifespan=lifespan)
 
 print(os.getenv('FRONTEND_URL'))
 print(os.getenv('DATABASE_URL'))
@@ -60,10 +61,11 @@ async def extract(file : UploadFile):
     return pdf_info
 
 @app.post('/to_pdf')
-def fill_pdf(results = Body(...)):
+async def to_pdf(results = Body(...)):
     encoded_filename = urllib.parse.quote("แบบตรวจสอบหลักสูตร.pdf")  # Encode for non-ASCII characters
 
-    pdf_data = to_pdf(results)
+    print("called")
+    pdf_data = await fill_pdf(results)
 
     return StreamingResponse(
         pdf_data,  # Pass BytesIO buffer

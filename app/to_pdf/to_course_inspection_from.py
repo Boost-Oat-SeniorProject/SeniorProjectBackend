@@ -10,7 +10,7 @@ import io
 from io import BytesIO
 
 
-def to_pdf(result):
+def fill_pdf(result):
     pdf_path = "./to_pdf/CourseInspectionForm2560.pdf"
 
     fields_to_fill = {
