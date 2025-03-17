@@ -65,7 +65,7 @@ async def to_pdf(results = Body(...)):
     encoded_filename = urllib.parse.quote("แบบตรวจสอบหลักสูตร.pdf")  # Encode for non-ASCII characters
 
     print("called")
-    pdf_data = await fill_pdf(results)
+    pdf_data = fill_pdf(results)
 
     return StreamingResponse(
         pdf_data,  # Pass BytesIO buffer
