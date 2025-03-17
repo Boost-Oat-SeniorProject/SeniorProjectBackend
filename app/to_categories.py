@@ -38,17 +38,26 @@ def calculateGPA(db, student):
 
     total = 0
     credit = 0
+    isN = False
+    gradeN = 0
     for enrollment in student.enrollments:
         course = enrollment.course
         if enrollment.grade in grades:
             total += grades[enrollment.grade] * course.creditAmount
             credit += course.creditAmount
+        elif enrollment.grade == "N":
+            isN = True
+            gradeN += course.creditAmount
     
     if student.unfoundCourses:
         for unfoundCourse in student.unfoundCourses:
             if unfoundCourse.grade in grades:
                 total += grades[unfoundCourse.grade] * unfoundCourse.creditAmount
                 credit += unfoundCourse.creditAmount
+            elif enrollment.grade == "N":
+                isN = True
+                gradeN += course.creditAmount
+            
 
     gpa = round(total / credit, 2)
     student.gpa = gpa
@@ -56,7 +65,7 @@ def calculateGPA(db, student):
     db.commit()
     db.refresh(student)
 
-    return student, credit
+    return student, credit + gradeN, isN
 
 def is_student_exist(db, info):
     student = db.query(Student).options(joinedload(Student.enrollments), joinedload(Student.unfoundCourses)).filter(Student.studentId == info["studentId"]).first()
@@ -111,14 +120,15 @@ def update_course_to_db(db, info):
     db.refresh(student)
 
     total_credit = None
+    isN = False
     if student.enrollments:
-        student, total_credit = calculateGPA(db, student)
+        student, total_credit, isN = calculateGPA(db, student)
 
-    return student, total_credit
+    return student, total_credit, isN
 
 def to_categories(info):
     db: Session = SessionLocal()
-    student, total_credit = update_course_to_db(db, info)
+    student, total_credit, isN = update_course_to_db(db, info)
 
     all_groups = []
     subjectTypeConfs = db.query(SubjectTypeConf).all()
@@ -365,6 +375,11 @@ def to_categories(info):
 
     if total_credit < 128:
         graduated = False
+
+    if isN:
+        info["message"] = "There is course that has grade N"
+        graduated = False
+
     if unfoundCourse:
         info["isGraduated"] = False
         info["gpa"] = student.gpa
